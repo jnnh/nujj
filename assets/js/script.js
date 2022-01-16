@@ -7,7 +7,10 @@ var mealDetails = document.querySelector(".meal-details");
 var recipeCloseBtn = document.getElementById("recipe-close-btn");
 var mealNutrientsContent = document.querySelector(".meal-nutrients-content");
 var modalEl = document.querySelector(".all-modals");
-var nutrientCloseBtn = document.getElementById("nutrient-close-btn")
+var nutrientCloseBtn = document.getElementById("nutrient-close-btn");
+var saveSearch = document.getElementById("search-again");
+var hiddenHeading = document.getElementById("search-menu");
+var errorNotice = document.querySelector(".error");
 
 // event listeners
 searchBtn.addEventListener("click", getMealList);
@@ -17,79 +20,145 @@ recipeCloseBtn.addEventListener("click", () => {
   mealDetailsContent.parentElement.classList.remove("showRecipe");
 });
 nutrientCloseBtn.addEventListener("click", () => {
-    mealNutrientsContent.parentElement.classList.remove("showNutrients");
-  });
+  mealNutrientsContent.parentElement.classList.remove("showNutrients");
+});
 mealDetails.addEventListener("click", getDetails);
-searchInput.addEventListener("input", () => searchIngredients(searchInput.value));
-
+searchInput.addEventListener("input", () =>
+  searchIngredients(searchInput.value)
+);
+saveSearch.addEventListener("click", searchAgain);
 
 //global arrays & objects
-var ingredientsFinder = ["strIngredient1","strIngredient2","strIngredient3","strIngredient4","strIngredient5","strIngredient6","strIngredient7","strIngredient8","strIngredient9","strIngredient10","strIngredient11","strIngredient12","strIngredient13","strIngredient14","strIngredient15","strIngredient16","strIngredient17","strIngredient18","strIngredient19","strIngredient20",];
-var quantityFinder = ["strMeasure1","strMeasure2","strMeasure3","strMeasure4","strMeasure5","strMeasure6","strMeasure7","strMeasure8","strMeasure9","strMeasure10","strMeasure11","strMeasure12","strMeasure13","strMeasure14","strMeasure15","strMeasure16","strMeasure17","strMeasure18","strMeasure19","strMeasure20",];
+var ingredientsFinder = [
+  "strIngredient1",
+  "strIngredient2",
+  "strIngredient3",
+  "strIngredient4",
+  "strIngredient5",
+  "strIngredient6",
+  "strIngredient7",
+  "strIngredient8",
+  "strIngredient9",
+  "strIngredient10",
+  "strIngredient11",
+  "strIngredient12",
+  "strIngredient13",
+  "strIngredient14",
+  "strIngredient15",
+  "strIngredient16",
+  "strIngredient17",
+  "strIngredient18",
+  "strIngredient19",
+  "strIngredient20",
+];
+var quantityFinder = [
+  "strMeasure1",
+  "strMeasure2",
+  "strMeasure3",
+  "strMeasure4",
+  "strMeasure5",
+  "strMeasure6",
+  "strMeasure7",
+  "strMeasure8",
+  "strMeasure9",
+  "strMeasure10",
+  "strMeasure11",
+  "strMeasure12",
+  "strMeasure13",
+  "strMeasure14",
+  "strMeasure15",
+  "strMeasure16",
+  "strMeasure17",
+  "strMeasure18",
+  "strMeasure19",
+  "strMeasure20",
+];
 var ingredients = [];
 var quantity = [];
-var nutritionalInfo = {calories: 0,totalFat: 0,cholesterol: 0,sodium: 0,carbs: 0,protein: 0,vitaminA: 0,vitaminC: 0,vitaminD: 0, vitaminK: 0,calcium: 0,iron: 0,potassium: 0,magnesium: 0,};
-var allIngredients =[];
+var nutritionalInfo = {
+  calories: 0,
+  totalFat: 0,
+  cholesterol: 0,
+  sodium: 0,
+  carbs: 0,
+  protein: 0,
+  vitaminA: 0,
+  vitaminC: 0,
+  vitaminD: 0,
+  vitaminK: 0,
+  calcium: 0,
+  iron: 0,
+  potassium: 0,
+  magnesium: 0,
+};
+var allIngredients = [];
+var searchHistory = [];
 
 //get autocomplete array
 function getArray() {
-    fetch("https://www.themealdb.com/api/json/v1/1/list.php?i=list")
-        .then(function(response){
-            if (response.ok){
-                response.json().then(function (data){
-                    var ingredientsList=data.meals
-                    for (var i=0; i<ingredientsList.length; i++){
-                        var ingredient =ingredientsList[i].strIngredient;
-                        allIngredients.push(ingredient);
-                    }
-                })
-                allIngredients.sort();
-            }
-            else{
-                console.log("error");
-                return;
-            }
-        })
-};
+  fetch("https://www.themealdb.com/api/json/v1/1/list.php?i=list").then(
+    function (response) {
+      if (response.ok) {
+        response.json().then(function (data) {
+          var ingredientsList = data.meals;
+          for (var i = 0; i < ingredientsList.length; i++) {
+            var ingredient = ingredientsList[i].strIngredient;
+            allIngredients.push(ingredient);
+          }
+        });
+        allIngredients.sort();
+      } else {
+        console.log("error");
+        return;
+      }
+    }
+  );
+}
 //search allIngredients and filter it
 function searchIngredients(searchText) {
-    let matches = allIngredients.filter(ingredient => {
-        var regEx = new RegExp (`^${searchText}`, "gi");
-        return ingredient.match(regEx);
-    });
-    if (searchText.length === 0){
-        matches =[];
-        matchList.innerHTML="";
-    }
-    else{
+  let matches = allIngredients.filter((ingredient) => {
+    var regEx = new RegExp(`^${searchText}`, "gi");
+    return ingredient.match(regEx);
+  });
+  if (searchText.length === 0) {
+    matches = [];
+    matchList.innerHTML = "";
+  } else {
     displayMatches(matches);
-    }
+  }
 }
 // Show autocomplete options in html
 function displayMatches(matches) {
-    if(matches.length > 0){
-        var html = matches.map(match => `
+  if (matches.length > 0) {
+    var html = matches
+      .map(
+        (match) => `
         <div class="auto-fill">
             <h4>${match}<h4>
-        </div>`).join("");
-    }
-    matchList.innerHTML = html;
+        </div>`
+      )
+      .join("");
+  }
+  matchList.innerHTML = html;
 }
 //run search if autocomplete option selected
-function submitInput(event){
-    var input=event.target.innerHTML;
-    searchInput.value=input;
-    getMealList();
+function submitInput(event) {
+  var input = event.target.innerHTML;
+  searchInput.value = input;
+  getMealList();
 }
 
 // get meal list that matches with the search ingredient
 function getMealList() {
   var inputTxt = document.getElementById("search-input").value.trim();
+  getMealListAPI(inputTxt);
+}
+function getMealListAPI(inputTxt) {
   fetch("https://www.themealdb.com/api/json/v1/1/filter.php?i=" + inputTxt)
     .then(function (response) {
       if (response.ok) {
         response.json().then(function (data) {
-          console.log(data);
+          saveSearchInput(inputTxt);
           if (data.meals) {
             mealList.innerHTML = "";
             var mealsArray = data.meals;
@@ -135,9 +204,9 @@ function getMealList() {
       mealList.innerHTML = "Sorry we were unable to connect!";
       mealList.classList.add("notFound");
     });
-    matches =[];
-    matchList.innerHTML="";
-    searchInput.value="";
+  matches = [];
+  matchList.innerHTML = "";
+  searchInput.value = "";
 }
 // create a modal
 function mealRecipeModal(meal) {
@@ -155,9 +224,11 @@ function mealRecipeModal(meal) {
         </div>
         <div class = additionalButtons>
         <div class = "recipe-link">
-            <a href = "${meal.strYoutube}" target = "_blank">Watch Video</a>
+            <div>
+                <a class ="link" href = "${meal.strYoutube}" target = "_blank">Watch Video</a>
+            <div>
             <button type = "submit" class = "more-info button is-link" id = "${meal.idMeal}">More Info</button>
-            
+            <div class=error> </div>
         </div>
         </div>
     `;
@@ -212,9 +283,15 @@ function getDetails(event) {
               var checkFraction = quantityDetail.includes("/");
               if (checkFraction) {
                 var extractFraction = quantityDetail.substring(0, 4);
-                console.log(extractFraction);
+                if (extractFraction.includes(" ")) {
+                  errorNotice.innerHTML =
+                    "Sorry. The nutritional information is currently unavailable.";
+                  mealDetailsContent.appendChild(errorNotice);
+                  var infoButton = document.querySelector(".more-info");
+                  infoButton.classList.remove("is-loading");
+                  return;
+                }
                 var converted = eval(extractFraction);
-                console.log(converted);
                 quantityDetail = quantityDetail.replace(
                   extractFraction,
                   converted + " "
@@ -228,6 +305,11 @@ function getDetails(event) {
         });
       }
     });
+  } else if (event.target.classList.contains("link")) {
+    var linkButton = document.querySelector(".link");
+    var url = linkButton.getAttribute("href");
+    console.log(url);
+    window.open(url, "_blank");
   }
 }
 //convert ingredient units so that they are compatible with second api
@@ -254,6 +336,22 @@ function convertUnits(quantity) {
 
 // get nutrients
 var getNutrients = async function (ingredientsArr, quantityArr) {
+  nutritionalInfo = {
+    calories: 0,
+    totalFat: 0,
+    cholesterol: 0,
+    sodium: 0,
+    carbs: 0,
+    protein: 0,
+    vitaminA: 0,
+    vitaminC: 0,
+    vitaminD: 0,
+    vitaminK: 0,
+    calcium: 0,
+    iron: 0,
+    potassium: 0,
+    magnesium: 0,
+  };
   for (var i = 0; i < ingredientsArr.length; i++) {
     var quantity = quantityArr[i];
     var ingredient = ingredientsArr[i];
@@ -266,72 +364,169 @@ var getNutrients = async function (ingredientsArr, quantityArr) {
     await fetch(apiUrl).then(function (response) {
       if (response.ok) {
         response.json().then(function (data) {
-          var fat = data.totalDaily.FAT.quantity;
-          nutritionalInfo.totalFat = Math.floor(nutritionalInfo.totalFat + fat);
-          var calories = data.calories;
-          nutritionalInfo.calories = Math.floor(
-            nutritionalInfo.calories + calories
-          );
-          var cholesterol = data.totalDaily.CHOLE.quantity;
-          nutritionalInfo.cholesterol = Math.floor(
-            nutritionalInfo.cholesterol + cholesterol
-          );
-          var sodium = data.totalDaily.NA.quantity;
-          nutritionalInfo.sodium = Math.floor(nutritionalInfo.sodium + sodium);
-          var carbs = data.totalDaily.CHOCDF.quantity;
-          nutritionalInfo.carbs = Math.floor(nutritionalInfo.carbs + carbs);
-          var protein = data.totalDaily.PROCNT.quantity;
-          nutritionalInfo.protein = Math.floor(
-            nutritionalInfo.protein + protein
-          );
-          var vA = data.totalDaily.VITA_RAE.quantity;
-          nutritionalInfo.vitaminA = Math.floor(nutritionalInfo.vitaminA + vA);
-          var vC = data.totalDaily.VITC.quantity;
-          nutritionalInfo.vitaminC = Math.floor(nutritionalInfo.vitaminC + vC);
-          var vD = data.totalDaily.VITD.quantity;
-          nutritionalInfo.vitaminD = Math.floor(nutritionalInfo.vitaminD + vD);
-          var vK = data.totalDaily.VITK1.quantity;
-          nutritionalInfo.vitaminK = Math.floor(nutritionalInfo.vitaminK + vK);
-          var calc = data.totalDaily.CA.quantity;
-          nutritionalInfo.calcium = Math.floor(nutritionalInfo.calcium + calc);
-          var iron = data.totalDaily.FE.quantity;
-          nutritionalInfo.iron = Math.floor(nutritionalInfo.iron + iron);
-          var potas = data.totalDaily.K.quantity;
-          nutritionalInfo.potassium = Math.floor(
-            nutritionalInfo.potassium + potas
-          );
+          if (data.totalDaily.FAT.quantity) {
+            var fat = data.totalDaily.FAT.quantity;
+            nutritionalInfo.totalFat = Math.floor(
+              nutritionalInfo.totalFat + fat
+            );
+          }
+          if (data.calories) {
+            var calories = data.calories;
+            nutritionalInfo.calories = Math.floor(
+              nutritionalInfo.calories + calories
+            );
+          }
+          if (data.totalDaily.CHOLE.quantity) {
+            var cholesterol = data.totalDaily.CHOLE.quantity;
+            nutritionalInfo.cholesterol = Math.floor(
+              nutritionalInfo.cholesterol + cholesterol
+            );
+          }
+          if (data.totalDaily.NA.quantity) {
+            var sodium = data.totalDaily.NA.quantity;
+            nutritionalInfo.sodium = Math.floor(
+              nutritionalInfo.sodium + sodium
+            );
+          }
+          if (data.totalDaily.CHOCDF.quantity) {
+            var carbs = data.totalDaily.CHOCDF.quantity;
+            nutritionalInfo.carbs = Math.floor(nutritionalInfo.carbs + carbs);
+          }
+          if (data.totalDaily.PROCNT.quantity) {
+            var protein = data.totalDaily.PROCNT.quantity;
+            nutritionalInfo.protein = Math.floor(
+              nutritionalInfo.protein + protein
+            );
+          }
+          if (data.totalDaily.VITA_RAE.quantity) {
+            var vA = data.totalDaily.VITA_RAE.quantity;
+            nutritionalInfo.vitaminA = Math.floor(
+              nutritionalInfo.vitaminA + vA
+            );
+          }
+          if (data.totalDaily.VITC.quantity) {
+            var vC = data.totalDaily.VITC.quantity;
+            nutritionalInfo.vitaminC = Math.floor(
+              nutritionalInfo.vitaminC + vC
+            );
+          }
+          if (data.totalDaily.VITD.quantity) {
+            var vD = data.totalDaily.VITD.quantity;
+            nutritionalInfo.vitaminD = Math.floor(
+              nutritionalInfo.vitaminD + vD
+            );
+          }
+          if (data.totalDaily.VITK1.quantity) {
+            var vK = data.totalDaily.VITK1.quantity;
+            nutritionalInfo.vitaminK = Math.floor(
+              nutritionalInfo.vitaminK + vK
+            );
+          }
+          if (data.totalDaily.CA.quantity) {
+            var calc = data.totalDaily.CA.quantity;
+            nutritionalInfo.calcium = Math.floor(
+              nutritionalInfo.calcium + calc
+            );
+          }
+          if (data.totalDaily.FE.quantity) {
+            var iron = data.totalDaily.FE.quantity;
+            nutritionalInfo.iron = Math.floor(nutritionalInfo.iron + iron);
+          }
+          if (data.totalDaily.K.quantity) {
+            var potas = data.totalDaily.K.quantity;
+            nutritionalInfo.potassium = Math.floor(
+              nutritionalInfo.potassium + potas
+            );
+          }
         });
+      } else {
+        errorNotice.innerHTML =
+          "Sorry. The nutritional information is currently unavailable.";
       }
     });
   }
   mealNutrientModal(nutritionalInfo);
   var infoButton = document.querySelector(".more-info");
-    infoButton.classList.remove("is-loading");
+  infoButton.classList.remove("is-loading");
 };
 // create a modal for nutrients
 function mealNutrientModal(nutrientsObj) {
   console.log(nutrientsObj);
   let html = `
     <div class = "nutrient-list">
-        <h2 class = "recipe-title">Nutrients</h2>
-        <p><span>Calories:</span> ${nutrientsObj.calories} </p>
-        <p><span>Total Fat:</span> ${nutrientsObj.totalFat} %</p>
-        <p><span>Cholesteral:</span> ${nutrientsObj.cholesterol} %</p>
-        <p><span>Sodium:</span> ${nutrientsObj.sodium} %</p>
-        <p><span>Carbohydrates:</span> ${nutrientsObj.carbs} %</p>
-        <p><span>Protein:</span> ${nutrientsObj.protein} %</p>
-        <p><span>Vitamin A:</span> ${nutrientsObj.vitaminA} %</p>
-        <p><span>Vitamin C:</span> ${nutrientsObj.vitaminC} %</p>
-        <p><span>Vitamin D:</span> ${nutrientsObj.vitaminD} %</p>
-        <p><span>Vitamin K:</span> ${nutrientsObj.vitaminK} %</p>
-        <p><span>Calcium:</span> ${nutrientsObj.calcium} %</p>
-        <p><span>Iron:</span> ${nutrientsObj.iron} %</p>
-        <p><span>Potassium:</span> ${nutrientsObj.potassium} %</p>
+        <h2 class = "nutrient-title">Nutrients</h2>
+        <h3 class = "disclaimer"> The following details are for the full receipe NOT the serving sizes<h3>
+        <div>
+            <p class="calories"><span>Calories:</span> ${nutrientsObj.calories} </p>
+            <div class="top-list">
+                <p class="right-justify exception">% Daily Value<p>
+                <p><span>Total Fat:</span> ${nutrientsObj.totalFat} %</p>
+                <p><span>Cholesteral:</span> ${nutrientsObj.cholesterol} %</p>
+                <p><span>Sodium:</span> ${nutrientsObj.sodium} %</p>
+                <p><span>Carbohydrates:</span> ${nutrientsObj.carbs} %</p>
+                <p class="exception"><span>Protein:</span> ${nutrientsObj.protein} %</p>
+            </div>
+            <p><span>Vitamin A:</span> ${nutrientsObj.vitaminA} %</p>
+            <p><span>Vitamin C:</span> ${nutrientsObj.vitaminC} %</p>
+            <p><span>Vitamin D:</span> ${nutrientsObj.vitaminD} %</p>
+            <p><span>Vitamin K:</span> ${nutrientsObj.vitaminK} %</p>
+            <p><span>Calcium:</span> ${nutrientsObj.calcium} %</p>
+            <p><span>Iron:</span> ${nutrientsObj.iron} %</p>
+            <p><span>Potassium:</span> ${nutrientsObj.potassium} %</p>
+        </div>
     </div>
     `;
   mealNutrientsContent.innerHTML = html;
-  modalEl.classList.add("modalFlex","container");
+  modalEl.classList.add("modalFlex", "container");
   mealNutrientsContent.parentElement.classList.add("showNutrients");
+}
+// save search for future use
+function saveSearchInput(input) {
+  var checkForDuplicate = document.getElementById(input);
+  if (checkForDuplicate) {
+    return;
+  } else {
+    hiddenHeading.className = "show";
+    var button = document.createElement("button");
+    button.classList.add("btn-history");
+    button.setAttribute("type", "submit");
+    button.setAttribute("id", input);
+    button.textContent = input;
+    saveSearch.appendChild(button);
+    var buttonObj = {
+      className: "btn",
+      type: "submit",
+      id: input,
+      textContent: input,
+    };
+    searchHistory.push(buttonObj);
+    saveButtons();
+  }
+}
+function saveButtons() {
+  localStorage.setItem("buttons", JSON.stringify(searchHistory));
+}
+var loadButtons = function () {
+  var savedButtons = localStorage.getItem("buttons");
+  if (savedButtons === null) {
+    hiddenHeading.className = "hidden";
+    searchHistory = [];
+    return false;
+  }
+  console.log(hiddenHeading);
+  hiddenHeading.className = "show";
+  savedButtons = JSON.parse(savedButtons);
+  for (var i = 0; i < savedButtons.length; i++) {
+    saveSearchInput(savedButtons[i].id);
+  }
+};
+function searchAgain(event) {
+  event.preventDefault();
+  if (event.target.classList.contains("btn-history")) {
+    var buttonID = event.target.getAttribute("id");
+    getMealListAPI(buttonID);
+  }
 }
 
 getArray();
+loadButtons();
