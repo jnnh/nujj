@@ -8,89 +8,95 @@ var recipeCloseBtn = document.getElementById("recipe-close-btn");
 var mealNutrientsContent = document.querySelector(".meal-nutrients-content");
 var modalEl = document.querySelector(".all-modals");
 var nutrientCloseBtn = document.getElementById("nutrient-close-btn")
+var saveSearch = document.getElementById("search-again");
+var hiddenHeading =document.getElementById("search-menu");
 
 // event listeners
 searchBtn.addEventListener("click", getMealList);
 matchList.addEventListener("click", submitInput);
 mealList.addEventListener("click", getMealRecipe);
 recipeCloseBtn.addEventListener("click", () => {
-    mealDetailsContent.parentElement.classList.remove("showRecipe");
+  mealDetailsContent.parentElement.classList.remove("showRecipe");
 
 });
 nutrientCloseBtn.addEventListener("click", () => {
-    mealNutrientsContent.parentElement.classList.remove("showNutrients");
-  });
+  mealNutrientsContent.parentElement.classList.remove("showNutrients");
+});
 mealDetails.addEventListener("click", getDetails);
 searchInput.addEventListener("input", () => searchIngredients(searchInput.value));
-
+saveSearch.addEventListener("click", searchAgain);
 
 //global arrays & objects
-var ingredientsFinder = ["strIngredient1","strIngredient2","strIngredient3","strIngredient4","strIngredient5","strIngredient6","strIngredient7","strIngredient8","strIngredient9","strIngredient10","strIngredient11","strIngredient12","strIngredient13","strIngredient14","strIngredient15","strIngredient16","strIngredient17","strIngredient18","strIngredient19","strIngredient20",];
-var quantityFinder = ["strMeasure1","strMeasure2","strMeasure3","strMeasure4","strMeasure5","strMeasure6","strMeasure7","strMeasure8","strMeasure9","strMeasure10","strMeasure11","strMeasure12","strMeasure13","strMeasure14","strMeasure15","strMeasure16","strMeasure17","strMeasure18","strMeasure19","strMeasure20",];
+var ingredientsFinder = ["strIngredient1", "strIngredient2", "strIngredient3", "strIngredient4", "strIngredient5", "strIngredient6", "strIngredient7", "strIngredient8", "strIngredient9", "strIngredient10", "strIngredient11", "strIngredient12", "strIngredient13", "strIngredient14", "strIngredient15", "strIngredient16", "strIngredient17", "strIngredient18", "strIngredient19", "strIngredient20",];
+var quantityFinder = ["strMeasure1", "strMeasure2", "strMeasure3", "strMeasure4", "strMeasure5", "strMeasure6", "strMeasure7", "strMeasure8", "strMeasure9", "strMeasure10", "strMeasure11", "strMeasure12", "strMeasure13", "strMeasure14", "strMeasure15", "strMeasure16", "strMeasure17", "strMeasure18", "strMeasure19", "strMeasure20",];
 var ingredients = [];
 var quantity = [];
-var nutritionalInfo = {calories: 0,totalFat: 0,cholesterol: 0,sodium: 0,carbs: 0,protein: 0,vitaminA: 0,vitaminC: 0,vitaminD: 0, vitaminK: 0,calcium: 0,iron: 0,potassium: 0,magnesium: 0,};
-var allIngredients =[];
+var nutritionalInfo = { calories: 0, totalFat: 0, cholesterol: 0, sodium: 0, carbs: 0, protein: 0, vitaminA: 0, vitaminC: 0, vitaminD: 0, vitaminK: 0, calcium: 0, iron: 0, potassium: 0, magnesium: 0, };
+var allIngredients = [];
+var searchHistory = [];
 
 //get autocomplete array
 function getArray() {
-    fetch("https://www.themealdb.com/api/json/v1/1/list.php?i=list")
-        .then(function(response){
-            if (response.ok){
-                response.json().then(function (data){
-                    var ingredientsList=data.meals
-                    for (var i=0; i<ingredientsList.length; i++){
-                        var ingredient =ingredientsList[i].strIngredient;
-                        allIngredients.push(ingredient);
-                    }
-                })
-                allIngredients.sort();
-            }
-            else{
-                console.log("error");
-                return;
-            }
+  fetch("https://www.themealdb.com/api/json/v1/1/list.php?i=list")
+    .then(function (response) {
+      if (response.ok) {
+        response.json().then(function (data) {
+          var ingredientsList = data.meals
+          for (var i = 0; i < ingredientsList.length; i++) {
+            var ingredient = ingredientsList[i].strIngredient;
+            allIngredients.push(ingredient);
+          }
         })
+        allIngredients.sort();
+      }
+      else {
+        console.log("error");
+        return;
+      }
+    })
 };
 //search allIngredients and filter it
 function searchIngredients(searchText) {
-    let matches = allIngredients.filter(ingredient => {
-        var regEx = new RegExp (`^${searchText}`, "gi");
-        return ingredient.match(regEx);
-    });
-    if (searchText.length === 0){
-        matches =[];
-        matchList.innerHTML="";
-    }
-    else{
+  let matches = allIngredients.filter(ingredient => {
+    var regEx = new RegExp(`^${searchText}`, "gi");
+    return ingredient.match(regEx);
+  });
+  if (searchText.length === 0) {
+    matches = [];
+    matchList.innerHTML = "";
+  }
+  else {
     displayMatches(matches);
-    }
+  }
 }
 // Show autocomplete options in html
 function displayMatches(matches) {
-    if(matches.length > 0){
-        var html = matches.map(match => `
+  if (matches.length > 0) {
+    var html = matches.map(match => `
         <div class="auto-fill">
             <h4>${match}<h4>
         </div>`).join("");
-    }
-    matchList.innerHTML = html;
+  }
+  matchList.innerHTML = html;
 }
 //run search if autocomplete option selected
-function submitInput(event){
-    var input=event.target.innerHTML;
-    searchInput.value=input;
-    getMealList();
+function submitInput(event) {
+  var input = event.target.innerHTML;
+  searchInput.value = input;
+  getMealList();
 }
 
 // get meal list that matches with the search ingredient
 function getMealList() {
   var inputTxt = document.getElementById("search-input").value.trim();
+  getMealListAPI(inputTxt)
+}
+function getMealListAPI(inputTxt){
   fetch("https://www.themealdb.com/api/json/v1/1/filter.php?i=" + inputTxt)
     .then(function (response) {
       if (response.ok) {
         response.json().then(function (data) {
-          console.log(data);
+          saveSearchInput(inputTxt);
           if (data.meals) {
             mealList.innerHTML = "";
             var mealsArray = data.meals;
@@ -136,9 +142,9 @@ function getMealList() {
       mealList.innerHTML = "Sorry we were unable to connect!";
       mealList.classList.add("notFound");
     });
-    matches =[];
-    matchList.innerHTML="";
-    searchInput.value="";
+  matches = [];
+  matchList.innerHTML = "";
+  searchInput.value = "";
 }
 // create a modal
 function mealRecipeModal(meal) {
@@ -232,11 +238,11 @@ function getDetails(event) {
       }
     });
   }
-  else if (event.target.classList.contains("link")){
+  else if (event.target.classList.contains("link")) {
     var linkButton = document.querySelector(".link");
     var url = linkButton.getAttribute("href");
     console.log(url);
-    window.open(url,"_blank");
+    window.open(url, "_blank");
   }
 }
 //convert ingredient units so that they are compatible with second api
@@ -315,17 +321,8 @@ var getNutrients = async function (ingredientsArr, quantityArr) {
   }
   mealNutrientModal(nutritionalInfo);
   var infoButton = document.querySelector(".more-info");
-    infoButton.classList.remove("is-loading");
+  infoButton.classList.remove("is-loading");
 };
-
-/*nutrientCloseBtn.addEventListener("click", () => {
-    mealNutrientsContent.parentElement.classList.remove("showNutrients");
-});*/
-
-
-
-
-
 // create a modal for nutrients
 function mealNutrientModal(nutrientsObj) {
   console.log(nutrientsObj);
@@ -354,8 +351,57 @@ function mealNutrientModal(nutrientsObj) {
     </div>
     `;
   mealNutrientsContent.innerHTML = html;
-  modalEl.classList.add("modalFlex","container");
+  modalEl.classList.add("modalFlex", "container");
   mealNutrientsContent.parentElement.classList.add("showNutrients");
 }
+// save search for future use
+function saveSearchInput(input) {
+  var checkForDuplicate = document.getElementById(input);
+  if (checkForDuplicate) {
+    return;
+  }
+  else {
+    hiddenHeading.className="show";
+    var button = document.createElement("button");
+    button.classList.add("btn-history");
+    button.setAttribute("type", "submit");
+    button.setAttribute("id", input);
+    button.textContent = input;
+    saveSearch.appendChild(button);
+    var buttonObj={
+      className: "btn",
+      type: "submit",
+      id: input,
+      textContent: input
+    }
+    searchHistory.push(buttonObj);
+    saveButtons();
+  }
+};
+function saveButtons(){
+  localStorage.setItem("buttons", JSON.stringify(searchHistory));
+}
+var loadButtons = function (){
+  var savedButtons=localStorage.getItem("buttons");
+  if (savedButtons === null){
+    hiddenHeading.className="hidden";
+    searchHistory=[];
+    return false;
+  }
+  console.log(hiddenHeading);
+  hiddenHeading.className="show";
+  savedButtons=JSON.parse(savedButtons);
+  for (var i=0; i<savedButtons.length;i++){
+    saveSearchInput(savedButtons[i].id);
+  }
+}
+function searchAgain(event){
+  event.preventDefault();
+  if (event.target.classList.contains("btn-history")) {
+    var buttonID = event.target.getAttribute("id");
+    getMealListAPI(buttonID);
+}
+};
 
 getArray();
+loadButtons();
