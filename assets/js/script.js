@@ -18,7 +18,6 @@ matchList.addEventListener("click", submitInput);
 mealList.addEventListener("click", getMealRecipe);
 recipeCloseBtn.addEventListener("click", () => {
   mealDetailsContent.parentElement.classList.remove("showRecipe");
-
 });
 nutrientCloseBtn.addEventListener("click", () => {
   mealNutrientsContent.parentElement.classList.remove("showNutrients");
@@ -34,6 +33,7 @@ var ingredients = [];
 var quantity = [];
 var nutritionalInfo = { calories: 0, totalFat: 0, cholesterol: 0, sodium: 0, carbs: 0, protein: 0, vitaminA: 0, vitaminC: 0, vitaminD: 0, vitaminK: 0, calcium: 0, iron: 0, potassium: 0, magnesium: 0, };
 var allIngredients = [];
+var searchHistory = [];
 
 //get autocomplete array
 function getArray() {
@@ -89,11 +89,14 @@ function submitInput(event) {
 // get meal list that matches with the search ingredient
 function getMealList() {
     var inputTxt = document.getElementById("search-input").value.trim();
+    getMealListAPI(inputTxt);
+}
+function getMealListAPI(inputTxt){
     fetch("https://www.themealdb.com/api/json/v1/1/filter.php?i=" + inputTxt)
         .then(function (response) {
             if (response.ok) {
                 response.json().then(function (data) {
-                    console.log(data);
+                    saveSearchInput(inputTxt);
                     if (data.meals) {
                         mealList.innerHTML = "";
                         var mealsArray = data.meals;
